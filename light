@@ -1,0 +1,63 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+#define LIGHT_SENSOR_PIN A0  // ขา A0 ของ Light Sensor
+#define BUZZER_PIN 8         // ขาของ Buzzer (Piezo)
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);  // กำหนดที่อยู่ของ LCD I2C
+
+// ทำนองเพลงและระยะเวลา
+int melody[] = {1000, 1500, 2000};  // โน้ตที่มีความถี่สูงเพื่อการแจ้งเตือน
+int noteDurations[] = {8, 8, 8};     // ความยาวของโน้ตสั้นๆ (8 = แค่ครึ่งจังหวะ)
+
+void setup() {
+  Serial.begin(9600);
+
+  pinMode(LIGHT_SENSOR_PIN, INPUT);   // กำหนดขาให้เป็น INPUT
+  pinMode(BUZZER_PIN, OUTPUT);        // กำหนดขาให้เป็น OUTPUT
+
+  lcd.init();            // เริ่มต้น LCD
+  lcd.backlight();       // เปิดไฟแบ็คไลท์ของ LCD
+  lcd.setCursor(0, 0);
+  lcd.print("Light Sensor");
+  delay(2000);           // แสดงผลแค่ 2 วินาที
+  lcd.clear();           // เคลียร์หน้าจอ
+}
+
+void loop() {
+  int sensorValue = analogRead(LIGHT_SENSOR_PIN); // อ่านค่าจาก Light Sensor
+
+  // แสดงค่าบน LCD
+  lcd.setCursor(0, 0);
+  lcd.print("Light: ");
+  lcd.print(sensorValue);
+  lcd.print("    ");
+
+  // หากแสงสูง (ค่ามากกว่า 300)
+  if (sensorValue > 300) {  // ค่าที่สูงกว่าความเข้มแสงที่คุณต้องการ
+    lcd.setCursor(0, 1);
+    lcd.print("Light Detected!");
+
+    // ส่งเสียงเตือนจาก Buzzer
+    playMelody(melody, noteDurations, 3);  // เรียกฟังก์ชัน playMelody
+
+  } else {
+    lcd.setCursor(0, 1);
+    lcd.print("No Light Detected");
+
+    // หยุดเสียง Buzzer ถ้าไม่มีแสง
+    noTone(BUZZER_PIN);     // หยุดเสียง
+  }
+
+  delay(1000); // อัพเดทหน้าจอทุก 1 วินาที
+}
+
+// ฟังก์ชันเล่นทำนอง (Melody) สำหรับเสียงเตือนสั้นๆ
+void playMelody(int *melody, int *noteDurations, int notesLength) {
+  for (int thisNote = 0; thisNote < notesLength; thisNote++) {
+    int noteDuration = 1000 / noteDurations[thisNote];  // คำนวณระยะเวลาของโน้ต
+    tone(BUZZER_PIN, melody[thisNote], noteDuration);   // ส่งเสียง
+    delay(noteDuration * 1.30);                         // รอจนเสียงจบ
+    noTone(BUZZER_PIN);                                 // หยุดเสียง
+  }
+}
