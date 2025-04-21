@@ -1,0 +1,40 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+#define MQ2_SENSOR_PIN A0  // ขา A0 ของ MQ-2
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);  // กำหนดที่อยู่ของ LCD I2C
+
+void setup() {
+  Serial.begin(9600);
+
+  pinMode(MQ2_SENSOR_PIN, INPUT);
+
+  lcd.init();            // เริ่มต้น LCD
+  lcd.backlight();       // เปิดไฟแบ็คไลท์ของ LCD
+  lcd.setCursor(0, 0);
+  lcd.print("MQ-2 Sensor");
+  delay(2000);           // แสดงผลแค่ 2 วินาที
+  lcd.clear();           // เคลียร์หน้าจอ
+}
+
+void loop() {
+  int sensorValue = analogRead(MQ2_SENSOR_PIN); // อ่านค่าจาก MQ-2
+
+  // แสดงค่าบน LCD
+  lcd.setCursor(0, 0);
+  lcd.print("Sensor: ");
+  lcd.print(sensorValue);
+  lcd.print("    ");
+
+  // หากมีควัน, ก๊าซ, หรือ CO สูง (ค่าที่มากกว่า 400)
+  if (sensorValue > 400) {  // ปรับค่าตามที่เหมาะสม
+    lcd.setCursor(0, 1);
+    lcd.print("Gas/Smoke Detected!");
+  } else {
+    lcd.setCursor(0, 1);
+    lcd.print("No Gas/Smoke");
+  }
+
+  delay(1000); // อัพเดททุก 1 วินาที
+}
