@@ -1,0 +1,54 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+#define PIR_SENSOR_PIN 2     // ขา 2 ใช้สำหรับ PIR Motion Sensor
+#define BUZZER_PIN 8         // ขาของ Buzzer (Piezo)
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);  // กำหนดที่อยู่ของ LCD I2C
+
+// ทำนองเพลงและระยะเวลา
+int melody[] = {1000, 1500, 2000};  // โน้ตที่มีความถี่สูงเพื่อการแจ้งเตือน
+int noteDurations[] = {8, 8, 8};     // ความยาวของโน้ตสั้นๆ (8 = แค่ครึ่งจังหวะ)
+
+void setup() {
+  Serial.begin(9600);
+
+  pinMode(PIR_SENSOR_PIN, INPUT);     // กำหนดขา PIR เป็น INPUT
+  pinMode(BUZZER_PIN, OUTPUT);        // กำหนดขา Buzzer เป็น OUTPUT
+
+  lcd.init();            // เริ่มต้น LCD
+  lcd.backlight();       // เปิดไฟแบ็คไลท์ของ LCD
+  lcd.setCursor(0, 0);
+  lcd.print("PIR Motion Sensor");
+  delay(2000);           // แสดงผลแค่ 2 วินาที
+  lcd.clear();           // เคลียร์หน้าจอ
+}
+
+void loop() {
+  int pirState = digitalRead(PIR_SENSOR_PIN);  // อ่านค่าจาก PIR Sensor
+
+  // แสดงค่าบน LCD
+  lcd.setCursor(0, 0);
+  lcd.print("Motion Status:");
+  lcd.setCursor(0, 1);
+  
+  if (pirState == HIGH) {  // ตรวจพบการเคลื่อนไหว
+    lcd.print("Danger Detected!");  // แสดงข้อความเตือน
+    playMelody(melody, noteDurations, 3);  // เล่นเสียงแจ้งเตือน
+  } else {  // ไม่พบการเคลื่อนไหว
+    lcd.print("No Motion Detected");
+    noTone(BUZZER_PIN);  // หยุดเสียง Buzzer
+  }
+
+  delay(1000);  // อัพเดทหน้าจอทุก 1 วินาที
+}
+
+// ฟังก์ชันเล่นทำนอง (Melody) สำหรับเสียงเตือนสั้นๆ
+void playMelody(int *melody, int *noteDurations, int notesLength) {
+  for (int thisNote = 0; thisNote < notesLength; thisNote++) {
+    int noteDuration = 1000 / noteDurations[thisNote];  // คำนวณระยะเวลาของโน้ต
+    tone(BUZZER_PIN, melody[thisNote], noteDuration);   // ส่งเสียง
+    delay(noteDuration * 1.30);                         // รอจนเสียงจบ
+    noTone(BUZZER_PIN);                                 // หยุดเสียง
+  }
+}
