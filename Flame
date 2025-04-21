@@ -1,0 +1,49 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+
+#define FLAME_SENSOR_PIN A0  // ขาของ Flame Sensor
+#define LED_PIN 7  // IN ของ LED Module
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);
+
+void setup() {
+  Serial.begin(9600);
+  
+  pinMode(FLAME_SENSOR_PIN, INPUT);
+  pinMode(LED_PIN, OUTPUT);
+
+  lcd.init();
+  lcd.backlight();
+  lcd.setCursor(0, 0);
+  lcd.print("Flame Sensor");
+  delay(2000);
+  lcd.clear();
+}
+
+void loop() {
+  int flameStatus = analogRead(FLAME_SENSOR_PIN); // อ่านค่าจาก Flame Sensor
+
+  // แสดงค่าบน LCD
+  lcd.setCursor(0, 0);
+  lcd.print("Flame: ");
+  lcd.print(flameStatus);
+  lcd.print("    ");
+
+  // หากตรวจจับไฟ (ค่า flameStatus สูง)
+  if (flameStatus > 500) {  // ตรวจจับไฟ
+    lcd.setCursor(0, 1);
+    lcd.print("Fire Detected!");
+    
+    // LED กระพริบ
+    digitalWrite(LED_PIN, HIGH);
+    delay(200);
+    digitalWrite(LED_PIN, LOW);
+    delay(200);
+  } else {
+    lcd.setCursor(0, 1);
+    lcd.print("No Fire Detected");
+    
+    // LED ดับ
+    digitalWrite(LED_PIN, LOW);
+  }
+}
